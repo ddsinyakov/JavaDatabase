@@ -4,8 +4,10 @@ import com.google.inject.Guice;
 
 public class Main {
     public static void main(String[] args) {
-        Guice.createInjector(new ConfigModule())
-                .getInstance(App.class)
-                .runVegetables();
+        try(ConfigModule configModule = new ConfigModule()) {
+            Guice.createInjector(configModule)
+                    .getInstance(AppUser.class)
+                    .run();
+        }
     }
 }

@@ -21,7 +21,11 @@ public class App {
 
         // region create connection
 
-        dbConnection = provider.connect();
+        try {
+            dbConnection = provider.connect();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         // turns off program if connection didn't resolve
         if (dbConnection == null) {
@@ -122,7 +126,11 @@ public class App {
 
         // region create connection
 
-        dbConnection = provider.connect();
+        try {
+            dbConnection = provider.connect();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         // turns off program if connection didn't resolve
         if (dbConnection == null) {

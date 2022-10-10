@@ -15,26 +15,14 @@ public class MySQLProvider
     private Driver mysqlDriver;
 
     @Override
-    public Connection connect() {
-
-
+    public Connection connect() throws SQLException {
         // access to database
-        try {
-            mysqlDriver = new Driver();
-            DriverManager.registerDriver(mysqlDriver);
-        }
-        catch (SQLException ex) {
-            System.out.println("Driver ini error: " + ex.getMessage());
-            return null;
-        }
+        mysqlDriver = new Driver();
+        DriverManager.registerDriver(mysqlDriver);
 
         // get database connection
         String connectionString = "jdbc:mysql://localhost:3306/javaTest?useUnicode=true&characterEncoding=UTF-8";
-        try { connection = DriverManager.getConnection(connectionString, "dima", "qwerty"); }
-        catch (SQLException ex) {
-            System.out.println("DB Connection error: " + ex.getMessage());
-            return null;
-        }
+        connection = DriverManager.getConnection(connectionString, "dima", "qwerty");
 
         return connection;
     }
