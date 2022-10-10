@@ -33,7 +33,7 @@ public class App {
 
         // region create table
 
-        // sql query to create new table
+        //sql query to create new table
 //        sql = "CREATE TABLE IF NOT EXISTS randoms (" +
 //                "id BIGINT PRIMARY KEY," +
 //                "num INT NOT NULL," +
@@ -105,15 +105,72 @@ public class App {
 
         System.out.println("Positive:");
         sql = "SELECT r.id, r.num, r.str FROM randoms AS r WHERE r.num > 0";
-        showTable(sql, ConsoleColors.GREEN);
+        showTableRandoms(sql, ConsoleColors.GREEN);
 
         System.out.println("Negative:");
         sql = "SELECT r.id, r.num, r.str FROM randoms AS r WHERE r.num < 0";
-        showTable(sql, ConsoleColors.RED);
+        showTableRandoms(sql, ConsoleColors.RED);
 
         // endregion
 
         // close connection with database
+        provider.closeConnection();
+    }
+
+    public void runVegetables() {
+        String sql;
+
+        // region create connection
+
+        dbConnection = provider.connect();
+
+        // turns off program if connection didn't resolve
+        if (dbConnection == null) {
+            System.out.println("Some error occurred");
+            return;
+        }
+
+        // endregion
+
+        // region create table vegetables
+
+        // sql query to create new table
+        sql = "CREATE TABLE IF NOT EXISTS vegetables (" +
+                "id BIGINT PRIMARY KEY," +
+                "name VARCHAR(64) NULL," +
+                "weight INT NOT NULL," +
+                "sellBy DATETIME NULL" +
+                ") Engine=InnoDB DEFAULT CHARSET = UTF8;";
+        executeNoResult(sql);
+
+        sql = "ALTER TABLE vegetables MODIFY COLUMN id BIGINT DEFAULT UUID_SHORT();";
+        executeNoResult(sql);
+
+        // endregion
+
+        // region insert data
+
+//        Random rnd = new Random();
+//        String[] veges = new String[] {"Tomato", "Potato", "Carrot", "Lettuce"};
+//
+//
+//        sql = "INSERT INTO vegetables(name, weight, sellBy) VALUES (?, ?, SYSDATE());";
+//        try (PreparedStatement prep = dbConnection.prepareStatement(sql)) {
+//            for (String veg: veges) {
+//                prep.setString(1, veg);
+//                prep.setInt(2, rnd.nextInt());
+//                prep.executeUpdate();
+//            }
+//        }
+//        catch (SQLException ex) {
+//            System.out.println("Query error: " + ex.getMessage());
+//        }
+
+        // endregion
+
+        sql = "SELECT v.id, v.name, v.weight, v.sellBy FROM vegetables AS v";
+        showTableVegetables(sql);
+
         provider.closeConnection();
     }
 
@@ -130,7 +187,7 @@ public class App {
         }
     }
 
-    public void showTable(String sql, String color) {
+    public void showTableRandoms(String sql, String color) {
         try (Statement statement = dbConnection.createStatement()) {
             ResultSet res = statement.executeQuery(sql);
 
@@ -139,6 +196,23 @@ public class App {
                         res.getLong(1),
                         res.getLong("num"),
                         res.getString(3));
+            }
+        }
+        catch (SQLException ex) {
+            System.out.println("Query error: " + ex.getMessage());
+        }
+    }
+
+    public void showTableVegetables(String sql) {
+        try (Statement statement = dbConnection.createStatement()) {
+            ResultSet res = statement.executeQuery(sql);
+
+            while (res.next()) {
+                System.out.printf("%d; %s; %d; %s; %n",
+                        res.getLong("id"),
+                        res.getString("name"),
+                        res.getInt("weight"),
+                        res.getString("sellBy"));
             }
         }
         catch (SQLException ex) {
