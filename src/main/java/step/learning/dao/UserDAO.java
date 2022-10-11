@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -30,10 +31,28 @@ public class UserDAO {
      * @return `id` of new record or null if fails
      */
     public String add( User user ) {
-        // генерируем id для новой записи
+
+        // check if user with the same login already exist
+        String sql = "SELECT `login` FROM Users WHERE `login` = ?";
+
+        try (PreparedStatement prep = connection.prepareStatement( sql )) {
+            prep.setString(1, user.getLogin());
+            ResultSet res = prep.executeQuery();
+
+            if(res.next()) {
+                System.out.println("User already exist");
+                return null;
+            }
+        }
+        catch( SQLException ex ) {
+            System.out.println( ex.getMessage() ) ;
+            return null ;
+        }
+
+        // generate id for new entry
         String id = UUID.randomUUID().toString() ;
-        // готовим запрос (подстановка введенных данных!!)
-        String sql = "INSERT INTO Users(`id`,`login`,`pass`,`name`) VALUES(?,?,?,?)" ;
+
+        sql = "INSERT INTO Users(`id`,`login`,`pass`,`name`) VALUES(?,?,?,?)" ;
 
         try( PreparedStatement prep = connection.prepareStatement( sql ) ) {
             prep.setString(1, id);
