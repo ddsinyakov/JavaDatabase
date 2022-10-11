@@ -27,38 +27,106 @@ public class AppUser {
 
     public void run() {
         checkCreateTable();
-        String addNew = "y";
-
-         do {
-            System.out.println("Do you want to add new User? y/n");
-            addNew = sc.nextLine();
-
-            if(addNew.equals("y")) {
-                User newUser = new User();
-
-                newUser.setLogin(askField("Login"));
-                newUser.setName(askField("Name"));
-                newUser.setPass(askField("Password"));
-
-                userDAO.add(newUser);
-            }
-        }
-        while (addNew.equals("y"));
-
+        menu();
     }
 
-    private String askField(String fieldName) {
-        String res = "";
-        while (Objects.equals(res, "")) {
-            System.out.println(fieldName + " -> ");
-            res = sc.nextLine();
+    private void menu() {
+        String ans = "";
 
-            if (Objects.equals(res, "")) {
-                System.out.println(fieldName + " can't be empty");
+        while(!ans.equals("0")) {
+            System.out.println("1. Register");
+            System.out.println("2. Login");
+            System.out.println("0. Exit");
+            ans = sc.nextLine();
+
+            switch (ans) {
+                case "1" -> regUser();
+                case "2" -> authUser();
             }
         }
+    }
 
-        return res;
+    private void authUser() {
+        System.out.print("Login -> ");
+        String login = sc.nextLine();
+        System.out.print("Password -> ");
+        String pass = sc.nextLine();
+
+        User res = userDAO.getUserByCredentials(login, pass);
+
+        if (res == null) {
+            System.out.println("ACCESS DENIED");
+            return;
+        }
+
+        System.out.println("Hello, " + res.getName());
+    }
+
+    public void regUser() {
+        User newUser = new User();
+
+        // region login
+
+        while (true) {
+            System.out.print("Login -> ");
+            newUser.setLogin(sc.nextLine());
+
+            if (Objects.equals(newUser.getLogin(), "")) {
+                System.out.println("Login can't be empty");
+                continue;
+            }
+
+            if (userDAO.isLoginUsed(newUser.getLogin())) {
+                System.out.println("Current login already exists");
+                continue;
+            }
+
+            break;
+        }
+
+        // endregion
+
+        // region name
+
+        while (true) {
+            System.out.print("Name -> ");
+            newUser.setName(sc.nextLine());
+
+            if (Objects.equals(newUser.getName(), "")) {
+                System.out.println("Name can't be empty");
+                continue;
+            }
+
+            break;
+        }
+
+        // endregion
+
+        // region password
+
+        while (true) {
+            System.out.print("Password -> ");
+            newUser.setPass(sc.nextLine());
+
+            if (Objects.equals(newUser.getPass(), "")) {
+                System.out.println("Password can't be empty");
+                continue;
+            }
+
+            System.out.print("Repeat password -> ");
+            String repeatPassword = sc.nextLine();
+
+            if (!repeatPassword.equals(newUser.getPass())) {
+                System.out.println("Passwords are different");
+                continue;
+            }
+
+            break;
+        }
+
+        // endregion
+
+        userDAO.add(newUser);
     }
 
     public void checkCreateTable() {

@@ -32,33 +32,21 @@ public class UserDAO {
      */
     public String add( User user ) {
 
-        // check if user with the same login already exist
-        String sql = "SELECT `login` FROM Users WHERE `login` = ?";
-
-        try (PreparedStatement prep = connection.prepareStatement( sql )) {
-            prep.setString(1, user.getLogin());
-            ResultSet res = prep.executeQuery();
-
-            if(res.next()) {
-                System.out.println("User already exist");
-                return null;
-            }
-        }
-        catch( SQLException ex ) {
-            System.out.println( ex.getMessage() ) ;
-            return null ;
-        }
-
         // generate id for new entry
         String id = UUID.randomUUID().toString() ;
 
-        sql = "INSERT INTO Users(`id`,`login`,`pass`,`name`) VALUES(?,?,?,?)" ;
+        String salt = hashService.hash(UUID.randomUUID().toString());
+
+        String passHash = this.hashPassword(user.getPass(), salt);
+
+        String sql = "INSERT INTO Users(`id`,`login`,`pass`,`name`, `salt`) VALUES(?,?,?,?,?)" ;
 
         try( PreparedStatement prep = connection.prepareStatement( sql ) ) {
             prep.setString(1, id);
             prep.setString(2, user.getLogin());
-            prep.setString(3, hashService.hash(user.getPass()));
+            prep.setString(3, passHash);
             prep.setString(4, user.getName());
+            prep.setString(5, salt);
             prep.executeUpdate();
         }
         catch( SQLException ex ) {
@@ -67,5 +55,70 @@ public class UserDAO {
         }
 
         return id ;
+    }
+
+
+    /**
+     * Checks User table for login given
+     * @param login value to look for
+     * @return true if login is in table
+     */
+    public boolean isLoginUsed(String login) {
+
+        // check if user with the same login already exist
+        String sql = "SELECT COUNT(U.`id`) FROM Users AS U WHERE U.`login` = ?";
+
+        try (PreparedStatement prep = connection.prepareStatement( sql )) {
+            prep.setString(1, login);
+            ResultSet res = prep.executeQuery();
+            res.next();
+
+            return res.getInt(1) > 0;
+        }
+        catch( SQLException ex ) {
+            System.out.println( ex.getMessage() ) ;
+            return true;
+        }
+    }
+
+
+    /**
+     * Calculates hash (optionally salt) from password
+     * @param password Password string
+     * @return hash
+     */
+    public String hashPassword(String password, String salt) {
+        return hashService.hash(password + salt);
+    }
+
+
+    /**
+     * Finds user with given credentials
+     * @param login user login
+     * @param pass user password
+     * @return User or null
+     */
+    public User getUserByCredentials(String login, String pass) {
+
+        String sql = "SELECT U.* FROM Users U WHERE `login` = ?";
+
+        try( PreparedStatement prep = connection.prepareStatement( sql ) ) {
+            prep.setString(1, login);
+            ResultSet res = prep.executeQuery();
+
+            if(res.next()) {
+                User user = new User(res);
+
+                String expectedHash = this.hashPassword(pass, user.getSalt());
+                if(expectedHash.equals(user.getPass())) {
+                    return user;
+                }
+            }
+        }
+        catch( SQLException ex ) {
+            System.out.println( ex.getMessage() ) ;
+        }
+
+        return null;
     }
 }
