@@ -91,6 +91,10 @@ public class UserDAO {
         return hashService.hash(password + salt);
     }
 
+    public String hashPassword(String password) {
+        return hashService.hash(password);
+    }
+
 
     /**
      * Finds user with given credentials
@@ -108,6 +112,9 @@ public class UserDAO {
 
             if(res.next()) {
                 User user = new User(res);
+
+                if (user.getSalt() == null && hashPassword(pass).equals(user.getPass()))
+                    return user;
 
                 String expectedHash = this.hashPassword(pass, user.getSalt());
                 if(expectedHash.equals(user.getPass())) {
